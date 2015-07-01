@@ -4,7 +4,7 @@ import sqlite3
 
 from urllib.parse import urlparse
 
-from settings import IGNORED_BOTH, IGNORED_LINKS, IGNORED_SOURCES, IGNORED_USERS
+from settings import IGNORED_BOTH, IGNORED_LINKS, IGNORED_SOURCES, IGNORED_USERS, NO_NP
 
 
 db = sqlite3.connect('totes.sqlite3')
@@ -20,6 +20,7 @@ def create_tables():
         name         TEXT  PRIMARY KEY,
         skip_source  BOOLEAN      DEFAULT FALSE,
         skip_link    BOOLEAN      DEFAULT FALSE,
+        no_np        BOOLEAN      DEFAULT FALSE,
         language     TEXT         DEFAULT 'en',
         t            TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
     )
@@ -42,6 +43,7 @@ def create_tables():
         author     TEXT,
         title      TEXT,
         skip       BOOLEAN      DEFAULT FALSE,
+        no_np      BOOLEAN      DEFAULT FALSE,
         t          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
     )
     """)
@@ -79,55 +81,69 @@ def populate_db():
         if sub_exists(sub):
             print("Updating {}".format(sub))
             cur.execute("""
-            UPDATE subreddits SET skip_source=%s
-            WHERE name=%s
+            UPDATE subreddits SET skip_source=?
+            WHERE name=?
             """, (True, sub))
         else:
             print("Inserting {}".format(sub))
             cur.execute("""
             INSERT INTO subreddits (name, skip_source)
-            VALUES (%s, %s)
+            VALUES (?, ?)
             """, (sub, True))
 
     for sub in IGNORED_BOTH:
         if sub_exists(sub):
             print("Updating {}".format(sub))
             cur.execute("""
-            UPDATE subreddits SET skip_source=%s, skip_link=%s
-            WHERE name=%s
+            UPDATE subreddits SET skip_source=?, skip_link=?
+            WHERE name=?
             """, (True, True, sub))
         else:
             print("Inserting {}".format(sub))
             cur.execute("""
             INSERT INTO subreddits (name, skip_source, skip_link)
-            VALUES (%s, %s, %s)
+            VALUES (?, ?, ?)
             """, (sub, True, True))
 
     for sub in IGNORED_LINKS:
         if sub_exists(sub):
             print("Updating {}".format(sub))
             cur.execute("""
-            UPDATE subreddits SET skip_link=%s
-            WHERE name=%s
+            UPDATE subreddits SET skip_link=?
+            WHERE name=?
             """, (True, sub))
         else:
             print("Inserting {}".format(sub))
             cur.execute("""
             INSERT INTO subreddits (name, skip_link)
-            VALUES (%s, %s)
+            VALUES (?, ?)
             """, (sub, True))
+
+    for sub in NO_NP:
+        if sub_exists(sub):
+            print("Updating {}".format(sub))
+            cur.execute("""
+            UPDATE subreddits SET no_np=?
+            WHERE name=?
+            """, (True, sub))
+        else:
+            print("Inserting {}".format(sub))
+            cur.execute("""
+            INSERT INTO subreddits (name, no_np)
+            VALUES (?, ?)
+            """, (sub, True))    
 
     for user in IGNORED_USERS:
         if user_exists(user):
             print("Updating {}".format(user))
             cur.execute("""
-            UPDATE users SET skip_link=%s
-            WHERE name=%s
+            UPDATE users SET skip_link=?
+            WHERE name=?
             """, (True, user))
         else:
             print("Inserting {}".format(user))
             cur.execute("""
-            INSERT INTO users (name, skip_link) VALUES (%s, %s)
+            INSERT INTO users (name, skip_link) VALUES (?, ?)
             """, (user, True))
 
     db.commit()

@@ -1,5 +1,12 @@
 from os import environ
 
+# Special subreddit and user settings
+IGNORED_BOTH=[]
+IGNORED_LINKS=[]
+IGNORED_SOURCES=[]
+IGNORED_USERS=[]
+NO_NP=["undelete","longtail","worldpolitics"]
+
 # Testing and debug settings
 TEST = environ.get("TEST", "false") == "true"
 DEBUG = environ.get("DEBUG", "false") == "true"
