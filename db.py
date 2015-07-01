@@ -4,7 +4,7 @@ import sqlite3
 
 from urllib.parse import urlparse
 
-from settings import IGNORED_BOTH, IGNORED_LINKS, IGNORED_SOURCES, IGNORED_USERS, NO_NP
+from settings import IGNORED_BOTH, IGNORED_LINKS, IGNORED_SOURCES, IGNORED_USERS, REGULAR_LINKS
 
 
 db = sqlite3.connect('totes.sqlite3')
@@ -20,7 +20,7 @@ def create_tables():
         name         TEXT  PRIMARY KEY,
         skip_source  BOOLEAN      DEFAULT FALSE,
         skip_link    BOOLEAN      DEFAULT FALSE,
-        no_np        BOOLEAN      DEFAULT FALSE,
+        regular_link BOOLEAN      DEFAULT FALSE,
         language     TEXT         DEFAULT 'en',
         t            TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
     )
@@ -37,14 +37,14 @@ def create_tables():
 
     cur.execute("""
     CREATE TABLE sources (
-        id         TEXT  PRIMARY KEY,
-        reply      TEXT  UNIQUE,
-        subreddit  TEXT,
-        author     TEXT,
-        title      TEXT,
-        skip       BOOLEAN      DEFAULT FALSE,
-        no_np      BOOLEAN      DEFAULT FALSE,
-        t          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+        id            TEXT  PRIMARY KEY,
+        reply         TEXT  UNIQUE,
+        subreddit     TEXT,
+        author        TEXT,
+        title         TEXT,
+        skip          BOOLEAN      DEFAULT FALSE,
+        regular_link  BOOLEAN      DEFAULT FALSE,
+        t             TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -119,17 +119,17 @@ def populate_db():
             VALUES (?, ?)
             """, (sub, True))
 
-    for sub in NO_NP:
+    for sub in REGULAR_LINKS:
         if sub_exists(sub):
             print("Updating {}".format(sub))
             cur.execute("""
-            UPDATE subreddits SET no_np=?
+            UPDATE subreddits SET regular_link=?
             WHERE name=?
             """, (True, sub))
         else:
             print("Inserting {}".format(sub))
             cur.execute("""
-            INSERT INTO subreddits (name, no_np)
+            INSERT INTO subreddits (name, regular_link)
             VALUES (?, ?)
             """, (sub, True))    
 
@@ -150,6 +150,7 @@ def populate_db():
     print("Default settings setup.")
 
 if __name__ == '__main__':
+    
     if 'create' in sys.argv:
         create_tables()
 

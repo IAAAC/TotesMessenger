@@ -49,7 +49,7 @@ def log_error(e):
                                           traceback.format_exc()))
 
 
-def np(url,no_np):
+def np(url,regular_link):
     """
     Transforms a reddit link into a no participation URL (which in some
     subreddits hides voting arrows, to help prevent administrator shadowbans).
@@ -57,8 +57,8 @@ def np(url,no_np):
     :return: A no participation (NP) link (regular link in subreddits that banned NP)
     """
     url = urlparse(url)
-    if not no_np: return "https://np.reddit.com{}".format(url.path)
-    else: return "https://reddit.com{}".format(url.path)
+    if regular_link: return "https://reddit.com{}".format(url.path)
+    else: return "https://np.reddit.com{}".format(url.path)
 
 
 def escape_title(title):
@@ -122,7 +122,7 @@ class Source:
         self.title = None
         self.reply = None
         self.skip = False
-        self.no_np = False
+        self.regular_link = False
         self.is_new = True
 
     def __eq__(self, other):
@@ -189,16 +189,16 @@ class Source:
             author=?,
             title=?,
             skip=?,
-            no_np=?
+            regular_link=?
             WHERE id=?
             """, (self.reply, self.subreddit, self.author, self.title,
-                  self.skip, self.no_np, self.id))
+                  self.skip, self.regular_link, self.id))
         else:
             cur.execute("""
-            INSERT INTO sources (id, reply, subreddit, author, title, skip, no_np)
+            INSERT INTO sources (id, reply, subreddit, author, title, skip, regular_link)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (self.id, self.reply, self.subreddit, self.author, self.title,
-                  self.skip, self.no_np))
+                  self.skip, self.regular_link))
 
         # Maybe commit?
         db.commit()
@@ -208,14 +208,14 @@ class Source:
         Populate attributes from database and fetch corresponding submission.
         """
         cur.execute("""
-        SELECT id, reply, subreddit, author, title, skip, no_np FROM sources
+        SELECT id, reply, subreddit, author, title, skip, regular_link FROM sources
         WHERE id=? LIMIT 1
         """, (self.id,))
 
         source = cur.fetchone()
 
         if source:
-            self.id, self.reply, self.subreddit, self.author, self.title, self.skip, self.no_np = source
+            self.id, self.reply, self.subreddit, self.author, self.title, self.skip, self.regular_link = source
             self.is_new = False
             return  # Return early cuz we don't need to perform an api call.
 
@@ -351,7 +351,7 @@ class Notification:
         self.id = source.id
         self.reply = source.reply
         self.links = []
-        self.no_np = source.no_np
+        self.regular_link = source.regular_link
 
     def set_language(self):
         query = cur.execute(
@@ -427,7 +427,7 @@ Source: {}
                 title = title[:TITLE_LIMIT] + "..."
             parts.append("- [/r/{}] [{}]({})".format(subreddit,
                                                      escape_title(title),
-                                                     np(permalink,self.no_np)))
+                                                     np(permalink,self.regular_link)))
 
         parts.append("[](#footer)*^({}) {}*".format(i18n.get("votingwarning"),
                                                     footer_links))

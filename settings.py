@@ -5,7 +5,7 @@ IGNORED_BOTH=[]
 IGNORED_LINKS=[]
 IGNORED_SOURCES=[]
 IGNORED_USERS=[]
-NO_NP=["undelete","longtail","worldpolitics"]
+REGULAR_LINKS=[]
 
 # Testing and debug settings
 TEST = environ.get("TEST", "false") == "true"
